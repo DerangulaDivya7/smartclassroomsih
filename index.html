@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindCare</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
+
+    body {
+      height: 100vh; display: flex; justify-content: center; align-items: center;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      animation: gradientShift 6s infinite alternate;
+    }
+
+    @keyframes gradientShift {
+      0% { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+      100% { background: linear-gradient(135deg, #2575fc, #6a11cb); }
+    }
+
+    .container {
+      width: 380px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 40px;
+      text-align: center;
+      color: #fff;
+      box-shadow: 0px 8px 25px rgba(0,0,0,0.2);
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    @keyframes fadeIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    h1 { font-size: 2rem; margin-bottom: 20px; letter-spacing: 1px; animation: glow 2s infinite alternate; }
+
+    @keyframes glow { from { text-shadow: 0 0 10px #fff, 0 0 20px #2575fc; } to { text-shadow: 0 0 20px #fff, 0 0 30px #6a11cb; } }
+
+    .input-box { margin-bottom: 20px; text-align: left; }
+    .input-box label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+    .input-box input {
+      width: 100%; padding: 10px 15px; border-radius: 8px; border: none; outline: none;
+      background: rgba(255,255,255,0.2); color: #fff; font-size: 1rem; transition: 0.3s ease;
+    }
+    .input-box input:focus { background: rgba(255,255,255,0.35); transform: scale(1.05); }
+
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: 8px;
+      font-size: 1rem; font-weight: bold; background: #fff; color: #2575fc;
+      cursor: pointer; transition: 0.4s; box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+    }
+    .btn:hover { background: #2575fc; color: #fff; transform: translateY(-3px); box-shadow: 0px 8px 20px rgba(0,0,0,0.3); }
+
+    .link { margin-top: 20px; font-size: 0.9rem; }
+    .link a { color: #fff; font-weight: bold; text-decoration: none; transition: 0.3s; }
+    .link a:hover { color: #ffd700; }
+
+    .page { display: none; }
+    .active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN PAGE -->
+  <div class="container page active" id="loginPage">
+    <h1>MindCare</h1>
+    <form onsubmit="loginUser(event)">
+      <div class="input-box">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="Enter your email" required>
+      </div>
+      <div class="input-box">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="btn">Login</button>
+      <div class="link">
+        Don’t have an account? <a href="#" onclick="showPage('signupPage')">Sign Up</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- SIGNUP PAGE -->
+  <div class="container page" id="signupPage">
+    <h1>Create Account</h1>
+    <form onsubmit="registerUser(event)">
+      <div class="input-box">
+        <label>Full Name</label>
+        <input type="text" id="signupName" placeholder="Enter your full name" required>
+      </div>
+      <div class="input-box">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+      </div>
+      <div class="input-box">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="Create a password" required>
+      </div>
+      <button type="submit" class="btn">Register</button>
+      <div class="link">
+        Already have an account? <a href="#" onclick="showPage('loginPage')">Login</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Switch pages
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    // Register user
+    function registerUser(event) {
+      event.preventDefault();
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+
+      // Save user in localStorage
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      if(users.some(u => u.email === email)) {
+        alert("Email already registered!");
+        return;
+      }
+
+      users.push({name, email, password});
+      localStorage.setItem('users', JSON.stringify(users));
+
+      showPage('loginPage');
+      alert("Registration successful! Please login.");
+    }
+
+    // Login user
+    function loginUser(event) {
+      event.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.email === email && u.password === password);
+
+      if(user) {
+        window.location.href = "file:///C:/Users/admin/Desktop/html%20folder/project.html"; // ✅ Redirect
+      } else {
+        alert("Incorrect email or password!");
+      }
+    }
+  </script>
+</body>
+</html>
