@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Smart Classroom & Scheduler</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet"> 
+<style>
+/* Reset & Body */
+* {margin:0; padding:0; box-sizing:border-box;}
+body {font-family:'Poppins', sans-serif; scroll-behavior:smooth; background:#f0f2f5; color:#333;}
+
+/* Navigation */
+nav { position:fixed; width:100%; top:0; left:0; z-index:100; background:linear-gradient(90deg,#2563eb,#1d4ed8); padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; color:white; box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+nav a { color:white; margin-left:1.5rem; text-decoration:none; font-weight:bold; transition:0.3s; }
+nav a:hover, nav a.active { text-decoration:underline; }
+
+/* Sections */
+section { min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; position:relative; padding:2rem; background-size:cover; background-position:center; overflow:hidden; transition:all 1s ease; margin-top:60px;}
+section::before { content:""; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:0; }
+section > * { position:relative; z-index:1; opacity:0; transform:translateY(30px); transition:all 1s ease; }
+section.active > * { opacity:1; transform:translateY(0); }
+
+/* Buttons */
+button { padding:0.7rem 1.5rem; border:none; border-radius:25px; cursor:pointer; background:linear-gradient(90deg,#2563eb,#1e40af); color:white; font-size:1rem; transition:0.3s; box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+button:hover { transform:scale(1.05); }
+
+/* Tables */
+table { width:90%; max-width:1000px; margin-top:1rem; border-collapse:collapse; background:rgba(255,255,255,0.95); border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+th, td { padding:10px; border:1px solid #ddd; text-align:center; color:#333; transition:0.3s;}
+th { background:#2563eb; color:white; border:none; }
+tr:nth-child(even) { background:rgba(255,255,255,0.85);}
+tr.added { animation: highlightAnim 0.5s ease forwards; }
+tr:hover { background:rgba(99, 102, 241,0.2); }
+.present { background:#d1fae5; }
+.absent { background:#fee2e2; }
+
+/* Resource Table */
+td.available { background:#4ade80; color:white; cursor:pointer; transition: background 0.5s, transform 0.3s;}
+td.occupied { background:#f87171; color:white; cursor:pointer; transition: background 0.5s, transform 0.3s;}
+td.pop { animation: popAnim 0.3s ease forwards; }
+@keyframes popAnim {0% {transform:scale(1);}50% {transform:scale(1.2);}100% {transform:scale(1);}}
+@keyframes highlightAnim {0% {background:#fff59d;}100% {background:inherit;}}
+
+/* Section Backgrounds */
+#home { background-image:url('https://images.unsplash.com/photo-1581090700227-4dffb027f61e?auto=format&fit=crop&w=1950&q=80'); }
+#student { background-image:url('https://images.unsplash.com/photo-1596496055504-85b2456f3ef2?auto=format&fit=crop&w=1950&q=80'); }
+#teacher { background-image:url('https://images.unsplash.com/photo-1581091012184-30a3b943e8c1?auto=format&fit=crop&w=1950&q=80'); }
+#leaderboard { background-image:url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1950&q=80'); }
+#resources { background-image:url('https://images.unsplash.com/photo-1581091012184-30a3b943e8c1?auto=format&fit=crop&w=1950&q=80'); }
+
+/* Notifications */
+#notification { position:fixed; top:80px; right:20px; background:#2563eb; color:white; padding:1rem 1.5rem; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.2); opacity:0; transition:0.5s; z-index:200; }
+#notification.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div><strong>AI Smart Classroom</strong></div>
+  <div>
+    <a href="#home" class="nav-link active">Home</a>
+    <a href="#student" class="nav-link">Student</a>
+    <a href="#teacher" class="nav-link">Teacher</a>
+    <a href="#leaderboard" class="nav-link">Leaderboard</a>
+    <a href="#resources" class="nav-link">Resources</a>
+  </div>
+</nav>
+
+<div id="notification"></div>
+
+<section id="home">
+  <h1>Welcome to AI Smart Classroom</h1>
+  <p>Manage timetables, attendance, resources, and student engagement with AI-powered insights.</p>
+  <button onclick="document.getElementById('student').scrollIntoView({behavior:'smooth'})">Get Started</button>
+</section>
+
+<section id="student">
+  <h2>Student Dashboard</h2>
+  <p>View timetable, mark attendance, and get AI study suggestions:</p>
+  <table id="studentTable">
+    <thead>
+      <tr><th>Day</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Attendance</th><th>Suggestion</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<section id="teacher">
+  <h2>Teacher Dashboard</h2>
+  <p>Manage timetable and resources:</p>
+  <label>Day: <input type="text" id="day" placeholder="Monday"></label>
+  <label>Time: <input type="text" id="time" placeholder="10:00 AM"></label>
+  <label>Subject: <input type="text" id="subject" placeholder="Math"></label>
+  <label>Teacher: <input type="text" id="teacherName" placeholder="Mr. Sharma"></label>
+  <label>Resource: <input type="text" id="resource" placeholder="Lab 1"></label>
+  <br><br>
+  <button onclick="addClass()">Add Class</button>
+  <button onclick="aiSuggest()">AI Suggest Classes</button>
+  <table id="teacherTable">
+    <thead>
+      <tr><th>Day</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Resource</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<section id="leaderboard">
+  <h2>Leaderboard</h2>
+  <table id="leaderboardTable">
+    <thead>
+      <tr><th>Student</th><th>Points</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<section id="resources">
+  <h2>Resource & Lab Availability</h2>
+  <p>Click on Available cells to book resources:</p>
+  <table id="resourceTable">
+    <thead>
+      <tr><th>Resource</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<script>
+// Scroll & nav active
+const sections = document.querySelectorAll("section");
+const navLinks = document.querySelectorAll(".nav-link");
+
+window.addEventListener("scroll", () => {
+  const scrollPos = window.scrollY + window.innerHeight / 2;
+  sections.forEach(section => {
+    if(scrollPos > section.offsetTop && scrollPos < section.offsetTop + section.offsetHeight){
+      section.classList.add("active");
+      navLinks.forEach(a => a.classList.remove("active"));
+      document.querySelector(`nav a[href="#${section.id}"]`).classList.add("active");
+    }
+  });
+});
+
+// Notification
+function showNotification(msg){
+  const notif = document.getElementById("notification");
+  notif.innerText = msg;
+  notif.classList.add("show");
+  setTimeout(()=> notif.classList.remove("show"),2000);
+}
+
+// Students & leaderboard
+const students=["Ganesh","Sita","Sandhya"];
+let leaderboard={ "Ganesh":1,"Sita":2,"Sandhya":3};
+
+// Timetable & resources
+const studentTableBody=document.querySelector("#studentTable tbody");
+const teacherTableBody=document.querySelector("#teacherTable tbody");
+const leaderboardTableBody=document.querySelector("#leaderboardTable tbody");
+const resourceTableBody=document.querySelector("#resourceTable tbody");
+
+const timetable=[ {day:"Monday",time:"9:00 AM",subject:"Math",teacher:"Mr. Sharma",resource:"Room 101",attendance:"absent"} ];
+const resources = ["Room 101","Lab 1","Lab 2"];
+const days = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+
+// Render tables
+function renderTables(){
+  studentTableBody.innerHTML="";
+  teacherTableBody.innerHTML="";
+  leaderboardTableBody.innerHTML="";
+  timetable.forEach((cls,index)=>{
+    const suggestion=cls.attendance==="absent"?"Review "+cls.subject:"Good";
+    studentTableBody.innerHTML+=`<tr class="${cls.attendance}">
+      <td>${cls.day}</td><td>${cls.time}</td><td>${cls.subject}</td><td>${cls.teacher}</td>
+      <td><button onclick="markAttendance(${index},'present')">Present</button>
+          <button onclick="markAttendance(${index},'absent')">Absent</button></td>
+      <td>${suggestion}</td>
+    </tr>`;
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML=`<td>${cls.day}</td><td>${cls.time}</td><td>${cls.subject}</td><td>${cls.teacher}</td><td>${cls.resource}</td>`;
+    teacherTableBody.appendChild(tr);
+    tr.classList.add('added');
+    setTimeout(()=>tr.classList.remove('added'),500);
+  });
+  Object.keys(leaderboard).sort((a,b)=>leaderboard[b]-leaderboard[a]).forEach(name=>{
+    leaderboardTableBody.innerHTML+=`<tr><td>${name}</td><td>${leaderboard[name]}</td></tr>`;
+  });
+}
+
+// Resource table render & booking
+function renderResourceTable(){
+  resourceTableBody.innerHTML="";
+  resources.forEach(res=>{
+    let row = `<tr><td>${res}</td>`;
+    days.forEach(day=>{
+      const occupied = timetable.some(c=>c.day===day && c.resource===res);
+      const statusClass = occupied ? 'occupied' : 'available';
+      row += `<td class="${statusClass}" onclick="bookResource('${res}','${day}',this)">${occupied?'Occupied':'Available'}</td>`;
+    });
+    row += "</tr>";
+    resourceTableBody.innerHTML += row;
+  });
+}
+
+function bookResource(res, day, cell){
+  if(cell.classList.contains('occupied')){ showNotification("Already booked"); return; }
+  const time = prompt(`Enter time to book ${res} on ${day}:`);
+  const subject = prompt("Enter subject:");
+  const teacher = prompt("Enter teacher:");
+  if(!time || !subject || !teacher){ showNotification("Booking cancelled"); return; }
+  timetable.push({day,time,subject,teacher,resource:res,attendance:"absent"});
+  students.forEach(s=>leaderboard[s]+=1);
+  showNotification(`Booked ${res} on ${day} at ${time}`);
+  cell.classList.remove('available');
+  cell.classList.add('occupied','pop');
+  setTimeout(()=>cell.classList.remove('pop'),300);
+  renderTables();
+}
+
+// Combined render
+function renderAll(){ renderTables(); renderResourceTable(); }
+
+// Add class
+function addClass(){
+  const day=document.getElementById("day").value;
+  const time=document.getElementById("time").value;
+  const subject=document.getElementById("subject").value;
+  const teacher=document.getElementById("teacherName").value;
+  const resource=document.getElementById("resource").value;
+  if(!day||!time||!subject||!teacher){ showNotification("Fill all fields"); return; }
+  if(timetable.some(c=>c.day===day && c.time===time && c.teacher===teacher)){ showNotification("Teacher conflict!"); return; }
+  if(timetable.some(c=>c.day===day && c.time===time && c.resource===resource)){ showNotification("Resource conflict!"); return; }
+  timetable.push({day,time,subject,teacher,resource,attendance:"absent"});
+  students.forEach(s=>leaderboard[s]+=1);
+  showNotification("Class added successfully!");
+  renderAll();
+}
+
+// Mark attendance
+function markAttendance(index,status){
+  timetable[index].attendance=status;
+  if(status==="present") students.forEach(s=>leaderboard[s]+=2);
+  showNotification(`Attendance marked as ${status}`);
+  renderAll();
+}
+
+// AI Suggestion
+function aiSuggest(){
+  const subjects=["Math","Science","English","History"];
+  const teachers=["Mr. Sharma","Ms. Rao","Mr. Singh","Ms. Gupta"];
+  const times=["9:00 AM","10:00 AM","11:00 AM","1:00 PM"];
+  for(let i=0;i<3;i++){
+    let attempts=0;
+    while(attempts<10){
+      const day=days[Math.floor(Math.random()*days.length)];
+      const time=times[Math.floor(Math.random()*times.length)];
+      const subject=subjects[Math.floor(Math.random()*subjects.length)];
+      const teacher=teachers[Math.floor(Math.random()*teachers.length)];
+      const resource=resources[Math.floor(Math.random()*resources.length)];
+      if(!timetable.some(c=>c.day===day && c.time===time && (c.teacher===teacher||c.resource===resource))){
+        timetable.push({day,time,subject,teacher,resource,attendance:"absent"});
+        students.forEach(s=>leaderboard[s]+=1);
+        showNotification("AI optimized timetable added a class");
+        break;
+      }
+      attempts++;
+    }
+  }
+  renderAll();
+}
+
+// Initial render
+renderAll();
+</script>
+</body>
+</html>
